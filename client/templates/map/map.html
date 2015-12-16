@@ -1,0 +1,30 @@
+<template name="map">
+  {{#contentFor "headerButtonLeft"}}
+    {{>ionNavBackButton path="main"}}
+  {{/contentFor}}
+  {{#contentFor "headerTitle"}}
+    <h1 class="title">Map</h1>
+  {{/contentFor}}
+
+  {{#ionView}}
+    {{#ionContent}}
+      <div id="map"></div>
+      <div id="actionButton">
+        <button id="createLine" class="button button-full button-outline button-positive disabled">Create A Line!</button>
+      </div>
+        {{#ionList}}
+
+          {{#each lines}}
+            {{#ionItem}}
+              <h3>{{createdBy}}</h3>
+              <p>{{createdAtFormattedTime}}</p>
+            {{/ionItem}}
+          {{/each}}
+
+        {{/ionList}}
+      
+    {{/ionContent}}
+      
+  {{/ionView}}
+
+</template>

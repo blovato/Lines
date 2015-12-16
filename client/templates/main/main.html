@@ -1,0 +1,37 @@
+<template name="main">
+  {{#contentFor "headerButtonLeft"}}
+    <button class="button button-clear" data-ion-popover="_popoverAuth">
+      {{#if isAndroid}}
+        {{> ionIcon icon='android-more-vertical'}}
+      {{else}}
+        {{> ionIcon icon='ios-gear'}}
+      {{/if}}
+    </button>
+  {{/contentFor}}
+  {{#contentFor "headerTitle"}}
+    <h1 class="title">Lines</h1>
+  {{/contentFor}}
+
+  {{#ionView}}
+    {{#ionContent}}
+      {{#ionList}}
+
+        {{#if currentUser}}
+          {{#ionItem path="map" iconLeft=true iconRight=true}}
+            {{> ionIcon icon="ios-location" class="positive"}}
+            Map
+            {{> ionIcon icon="ios-arrow-right"}}
+          {{/ionItem}}
+
+        {{else}}
+          {{#ionItem path="" iconLeft=true iconRight=true}}
+            {{> ionIcon icon="ios-checkmark" class="dark"}}
+            Map
+            {{> ionIcon icon="ios-arrow-right"}}
+          {{/ionItem}}
+        {{/if}}
+
+      {{/ionList}}
+    {{/ionContent}}
+  {{/ionView}}
+</template>
