@@ -2,7 +2,7 @@ Template.map.helpers({
   'lines': function(){
     var currentUserId = Meteor.userId();
     //createdBy: "Brenten Lovato"
-    return Lines.find({}, {sort: {createdAt: -1}});
+    return Lines.find({}, {sort: {createdAt: -1}, limit: 10});
   },
   'linesCount': function(){
     return Lines.find().count();
@@ -23,37 +23,51 @@ Template.map.helpers({
   }
 });
 
+//declare global latLng var
 var latLngs = [];
+var buildingLine;
 Template.map.events({
   'click #createLine': function(){
+    // set buttons visibility and class
     $('#createLine').addClass('disabled');
+    $('#createLine').hide();
     $('#endLine').removeClass('disabled');
+    $('#endLine').show();
 
     var lats = [];
     var lngs = [];
-    
     var currentUserId = Meteor.userId();
-
-    // every second check if there is a new latLng, 
-    // if true add it to the array
-    setInterval(function(){
-      var currentLatLng = Geolocation.currentLocation();
-      console.log(currentLatLng);
-
-      if(lats.indexOf(currentLatLng.coords.latitude) && lngs.indexOf(currentLatLng.coords.longitude)){
-        latLngs.push(currentLatLng);
-      }
-    }, 2000);    
-  },
-  'click #endLine': function(){
-    $('#endLine').addClass('disabled');
-    $('#createLine').removeClass('disabled');
-
+    var date = new Date();
+    var lastInsertId;
+    // create new record that will be updated by the interval
+    
     Lines.insert({
-      "createdAt": new Date(),
+      "createdAt": date,
       "coordinates": latLngs,
       "createdBy": currentUserId
+    }, function(err, _id){
+      lastInsertId = _id;
     });
+    // every second check if there is a new latLng, 
+    // if true add it to the array
+    buildingLine = setInterval(function(){
+      // fetch location on interval and update record
+      var currentLatLng = Geolocation.currentLocation();
+      if(lats.indexOf(currentLatLng.coords.latitude) && lngs.indexOf(currentLatLng.coords.longitude)){
+        latLngs.push([currentLatLng.coords.latitude, currentLatLng.coords.longitude]);
+        Lines.update(lastInsertId, {$set: {coordinates: latLngs}});
+      }
+    }, 1000);    
+  },
+  'click #endLine': function(){
+    // set buttons visibility and class
+    $('#endLine').addClass('disabled');
+    $('#endLine').hide();
+    $('#createLine').removeClass('disabled');
+    $('#createLine').show();
+
+    // end search for coordinates and update function
+    clearInterval(buildingLine);
   } 
 });
 
@@ -66,9 +80,11 @@ Meteor.startup(function() {
   $(window).resize(); // trigger resize event
 });
 
-
-
 Template.map.rendered = function() {
+  // initialize endLine button to hidden
+  $('#endLine').hide();
+
+  // create map and attributes
   L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
   var map = L.map('map', {
     doubleClickZoom: true,
