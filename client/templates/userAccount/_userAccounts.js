@@ -7,3 +7,12 @@ Template._userAccounts.events({
     AccountsTemplates.logout();
   }
 });
+
+var myPostLogout = function(){
+  //example redirect after logout
+  Router.go('/map');
+};
+
+AccountsTemplates.configure({
+  onLogoutHook: myPostLogout
+});

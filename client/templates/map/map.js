@@ -2,26 +2,36 @@ Template.map.helpers({
   'lines': function(){
     var currentUserId = Meteor.userId();
     //createdBy: "Brenten Lovato"
-    return Lines.find({});
+    return Lines.find({}, {sort: {createdAt: -1}});
   },
   'linesCount': function(){
     return Lines.find().count();
   },
   'createdAtFormattedTime': function () {
-    var hour = String(this.createdAt.getHours()%12);
+    var hour = String(this.createdAt.getHours());
+    if(hour > 12){
+      hour = String(this.createdAt.getHours()%12);
+    }
     var minute = this.createdAt.getMinutes();
     if(minute < 10){
       minute = "0" + String(minute);
     }
     return hour + ":" + minute;
+  },
+  'createdAtFormattedDay': function(){
+    return this.createdAt.toDateString();
   }
 });
+
+var latLngs = [];
 Template.map.events({
   'click #createLine': function(){
-    $("createLine").remove();
+    $('#createLine').addClass('disabled');
+    $('#endLine').removeClass('disabled');
+
     var lats = [];
     var lngs = [];
-    var latLngs = [];
+    
     var currentUserId = Meteor.userId();
 
     // every second check if there is a new latLng, 
@@ -33,16 +43,17 @@ Template.map.events({
       if(lats.indexOf(currentLatLng.coords.latitude) && lngs.indexOf(currentLatLng.coords.longitude)){
         latLngs.push(currentLatLng);
       }
-    }, 2000);
+    }, 2000);    
+  },
+  'click #endLine': function(){
+    $('#endLine').addClass('disabled');
+    $('#createLine').removeClass('disabled');
 
     Lines.insert({
       "createdAt": new Date(),
       "coordinates": latLngs,
       "createdBy": currentUserId
     });
-  },
-  'click #endLine': function(){
-
   } 
 });
 
