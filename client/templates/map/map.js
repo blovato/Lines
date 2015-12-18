@@ -26,6 +26,8 @@ Template.map.helpers({
 //declare global latLng var
 var latLngs = [];
 var buildingLine;
+var lastInsertId;
+
 Template.map.events({
   'click #createLine': function(){
     // set buttons visibility and class
@@ -38,9 +40,8 @@ Template.map.events({
     var lngs = [];
     var currentUserId = Meteor.userId();
     var date = new Date();
-    var lastInsertId;
-    // create new record that will be updated by the interval
     
+    // create new record that will be updated by the interval
     Lines.insert({
       "createdAt": date,
       "coordinates": latLngs,
@@ -53,11 +54,11 @@ Template.map.events({
     buildingLine = setInterval(function(){
       // fetch location on interval and update record
       var currentLatLng = Geolocation.currentLocation();
-      if(lats.indexOf(currentLatLng.coords.latitude) && lngs.indexOf(currentLatLng.coords.longitude)){
+      if(!lats.indexOf(currentLatLng.coords.latitude) && !lngs.indexOf(currentLatLng.coords.longitude)){
         latLngs.push([currentLatLng.coords.latitude, currentLatLng.coords.longitude]);
         Lines.update(lastInsertId, {$set: {coordinates: latLngs}});
       }
-    }, 1000);    
+    }, 1000);
   },
   'click #endLine': function(){
     // set buttons visibility and class
@@ -68,9 +69,26 @@ Template.map.events({
 
     // end search for coordinates and update function
     clearInterval(buildingLine);
+
+    // if the last line was empty then remove it
+    var lastInsert = Lines.find(lastInsertId,{}).fetch();
+    console.log(lastInsert);
+    if(lastInsert[0].coordinates.length <= 0){
+      Lines.remove(lastInsertId);
+      // show searching for location popup
+      IonPopup.show({
+        title: 'You need to move for the line to be recorded',
+        buttons: [{
+          text: 'dismiss',
+          type: 'button-assertive button-clear',
+          onTap: function() {
+            IonPopup.close();
+          }
+        }]
+      });
+    }
   } 
 });
-
 
 // on startup run resizing event
 Meteor.startup(function() {
@@ -84,35 +102,49 @@ Template.map.rendered = function() {
   // initialize endLine button to hidden
   $('#endLine').hide();
 
+  // L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
   // create map and attributes
-  L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
+  var mapTile = L.tileLayer('http://{s}.tile.openstreetmap.se/hydda/base/{z}/{x}/{y}.png');
   var map = L.map('map', {
     doubleClickZoom: true,
     attributionControl: false,
-    zoomControl:false 
-  }).setView([37.749745, -122.467134], 13);
-  L.control.attribution({'prefix': ''});
+    zoomControl: false 
+  }).setView([37.749745, -122.467134], 15);
 
-  //draw all lines in Lines collection on map
+  // toggle tile layer control
+  L.control.layers('',{
+    "map layer": mapTile
+  }).addTo(map);
+
+  // draw all lines in Lines collection on map
   var coordinatesAll = Lines.find().forEach(function(lines) {
     var polyline = L.polyline(lines['coordinates'], {color: 'black'}).addTo(map);
+  });
+
+  // show searching for location popup
+  IonPopup.show({
+    title: 'Searching for your location...',
+    buttons: [{
+      text: 'dismiss',
+      type: 'button-assertive button-clear',
+      onTap: function() {
+        IonPopup.close();
+      }
+    }]
   });
 
   // locate user on template load
   var userLocation = Geolocation.currentLocation();
   var loopGeolocation = setInterval(function(){
     userLocation = Geolocation.currentLocation();
+    
     if(userLocation && map){
+      IonPopup.close();
       clearInterval(loopGeolocation);
-      console.log(userLocation);
       var accuracyLocation = L.circle([userLocation.coords.latitude, 
                                        userLocation.coords.longitude], 
                                        userLocation.coords.accuracy,
-                                       {color: "black", weight: 0, opacity: .3});
-      var pointLocation = L.circle([userLocation.coords.latitude, 
-                                    userLocation.coords.longitude],.1,
-                                    {color: "black", weight: 5, opacity: 1});
-      var accuracyAndPointLocation = L.layerGroup([pointLocation, accuracyLocation]).addTo(map);
+                                       {color: "black", weight: 0, opacity: .3}).addTo(map);
       map.fitBounds(accuracyLocation.getBounds());
       $('#createLine').removeClass('disabled');
     }
