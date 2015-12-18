@@ -4,9 +4,6 @@ Template.map.helpers({
     //createdBy: "Brenten Lovato"
     return Lines.find({}, {sort: {createdAt: -1}, limit: 10});
   },
-  'linesCount': function(){
-    return Lines.find().count();
-  },
   'createdAtFormattedTime': function () {
     var hour = String(this.createdAt.getHours());
     if(hour > 12){
@@ -29,12 +26,20 @@ var buildingLine;
 var lastInsertId;
 
 Template.map.events({
+  'click #showLineList': function(){
+    $('#showLineList').hide();
+
+    // animate lines list
+    $( "div .item" ).first().show( "fast", function showNext() {
+      $( this ).next( "div .item" ).show( "fast", showNext );
+    });
+  },
   'click #createLine': function(){
     // set buttons visibility and class
     $('#createLine').addClass('disabled');
-    $('#createLine').hide();
+    $('#createLine').hide(100);
     $('#endLine').removeClass('disabled');
-    $('#endLine').show();
+    $('#endLine').show(100);
 
     var lats = [];
     var lngs = [];
@@ -63,16 +68,16 @@ Template.map.events({
   'click #endLine': function(){
     // set buttons visibility and class
     $('#endLine').addClass('disabled');
-    $('#endLine').hide();
+    $('#endLine').hide(100);
     $('#createLine').removeClass('disabled');
-    $('#createLine').show();
+    $('#createLine').show(100);
 
     // end search for coordinates and update function
     clearInterval(buildingLine);
 
     // if the last line was empty then remove it
     var lastInsert = Lines.find(lastInsertId,{}).fetch();
-    console.log(lastInsert);
+  
     if(lastInsert[0].coordinates.length <= 0){
       Lines.remove(lastInsertId);
       // show searching for location popup
@@ -101,6 +106,7 @@ Meteor.startup(function() {
 Template.map.rendered = function() {
   // initialize endLine button to hidden
   $('#endLine').hide();
+  $('div .item').hide();
 
   // L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
   // create map and attributes
@@ -122,24 +128,15 @@ Template.map.rendered = function() {
   });
 
   // show searching for location popup
-  IonPopup.show({
-    title: 'Searching for your location...',
-    buttons: [{
-      text: 'dismiss',
-      type: 'button-assertive button-clear',
-      onTap: function() {
-        IonPopup.close();
-      }
-    }]
-  });
+  IonBackdrop.retain();
 
   // locate user on template load
   var userLocation = Geolocation.currentLocation();
   var loopGeolocation = setInterval(function(){
+
     userLocation = Geolocation.currentLocation();
-    
     if(userLocation && map){
-      IonPopup.close();
+      IonBackdrop.release();
       clearInterval(loopGeolocation);
       var accuracyLocation = L.circle([userLocation.coords.latitude, 
                                        userLocation.coords.longitude], 

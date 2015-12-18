@@ -1,37 +1,32 @@
 <template name="main">
-  {{#contentFor "headerButtonLeft"}}
-    <button class="button button-clear" data-ion-popover="_popoverAuth">
-      {{#if isAndroid}}
-        {{> ionIcon icon='android-more-vertical'}}
-      {{else}}
-        {{> ionIcon icon='ios-gear'}}
-      {{/if}}
-    </button>
-  {{/contentFor}}
-  {{#contentFor "headerTitle"}}
-    <h1 class="title">Lines</h1>
-  {{/contentFor}}
-
+  {{#if currentUser}}
+    <a id="mapForward" href="{{pathFor 'map'}}" class="pull-right button button-positive button-clear">Map {{> ionIcon icon="ios-arrow-forward"}} </a>
+  {{/if}}
   {{#ionView}}
     {{#ionContent}}
-      {{#ionList}}
 
+      {{#if showLoginTemplate}}
+        <div class="padding">          
+          {{> atForm}}
+        </div>
+      {{else}}
+        <div class="empty-view">
+          {{> ionIcon icon='android-globe'}}
+          Lines
+        </div>
+      {{/if}}
+      
+      <div class="podbar">
+        <div class="row">
         {{#if currentUser}}
-          {{#ionItem path="map" iconLeft=true iconRight=true}}
-            {{> ionIcon icon="ios-location" class="positive"}}
-            Map
-            {{> ionIcon icon="ios-arrow-right"}}
-          {{/ionItem}}
-
+          <button class="auth-btns button button-small button-full button-positive button-clear" data-action="logout">LOG OUT</button>
+          <button class="auth-btns button button-small button-full button-positive button-clear disabled" data-action="login">LOG IN</button>
         {{else}}
-          {{#ionItem path="" iconLeft=true iconRight=true}}
-            {{> ionIcon icon="ios-location" class="dark"}}
-            Map
-            {{> ionIcon icon="ios-arrow-right"}}
-          {{/ionItem}}
-        {{/if}}
-
-      {{/ionList}}
+          <button class="auth-btns button button-small button-full button-positive button-clear disabled" data-action="logout">LOG OUT</button>
+          <button class="auth-btns button button-small button-full button-positive button-clear" data-action="login">LOG IN</button>
+        {{/if}}            
+      </div>
+      </div>
     {{/ionContent}}
   {{/ionView}}
 </template>

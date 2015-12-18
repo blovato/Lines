@@ -49,3 +49,33 @@ $loading-font-size: 22px;
   top:1px;
   z-index:10;
 }
+
+.empty-view {
+  color: #ccc;
+  text-align: center;
+  padding-top: 160px;
+
+  i {
+    display: block;
+    margin: 0 auto 12px auto;
+    font-size: 80px;
+  }
+}
+
+.podbar {
+  bottom:0;
+  position:fixed;
+  z-index:150;
+  _position:absolute;
+  _top:expression(eval(document.documentElement.scrollTop+
+      (document.documentElement.clientHeight-this.offsetHeight)));
+  height:65px;
+  width: 100%;
+}
+
+#mapForward {
+  z-index: 150; 
+  text-align: right;
+  position: absolute;
+  right: 0px;
+}

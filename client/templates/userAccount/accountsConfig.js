@@ -1,8 +1,8 @@
 AccountsTemplates.configure({
   negativeValidation: true,
-  negativeFeedback: false,
-  positiveValidation: false,
-  positiveFeedback: false,
+  negativeFeedback: true,
+  positiveValidation: true,
+  positiveFeedback: true,
 
   onSubmitHook: function(error, state){
     if (!error) {
