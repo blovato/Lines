@@ -39,7 +39,7 @@ $loading-font-size: 22px;
 }
 
 #map {
-  min-height: 385px;
+  min-height: 315px;
   min-width: 100%;
   background-color: white;
 }
@@ -53,13 +53,18 @@ $loading-font-size: 22px;
 .empty-view {
   color: #ccc;
   text-align: center;
-  padding-top: 160px;
+  padding-top: 120px;
+  padding-bottom: 20px;
 
   i {
     display: block;
     margin: 0 auto 12px auto;
     font-size: 80px;
   }
+}
+
+#showLineList {
+  text-align: center;
 }
 
 .podbar {
@@ -71,11 +76,4 @@ $loading-font-size: 22px;
       (document.documentElement.clientHeight-this.offsetHeight)));
   height:65px;
   width: 100%;
-}
-
-#mapForward {
-  z-index: 150; 
-  text-align: right;
-  position: absolute;
-  right: 0px;
 }

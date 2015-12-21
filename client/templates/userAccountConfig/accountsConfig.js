@@ -1,8 +1,8 @@
 AccountsTemplates.configure({
   negativeValidation: true,
   negativeFeedback: true,
-  positiveValidation: true,
-  positiveFeedback: true,
+  positiveValidation: false,
+  positiveFeedback: false,
 
   onSubmitHook: function(error, state){
     if (!error) {
@@ -12,7 +12,7 @@ AccountsTemplates.configure({
       }
       if (state === "signUp") {
         // Successfully registered
-        Router.go('/map');
+        Router.go('/addProfile');
       }
     }
   },

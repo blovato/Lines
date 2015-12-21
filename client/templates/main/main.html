@@ -1,7 +1,5 @@
 <template name="main">
-  {{#if currentUser}}
-    <a id="mapForward" href="{{pathFor 'map'}}" class="pull-right button button-positive button-clear">Map {{> ionIcon icon="ios-arrow-forward"}} </a>
-  {{/if}}
+  {{> ionNavBar class="bar-clear"}}
   {{#ionView}}
     {{#ionContent}}
 
@@ -10,22 +8,38 @@
           {{> atForm}}
         </div>
       {{else}}
-        <div class="empty-view">
-          {{> ionIcon icon='android-globe'}}
-          Lines
-        </div>
+        {{#if currentUser}}
+        {{else}}
+          <div class="empty-view">
+            {{> ionIcon icon='android-globe'}}
+            Lines
+          </div>
+        {{/if}}
       {{/if}}
-      
+
+      {{#if currentUser}}
+        {{#ionList}}
+          {{#ionItem path="map" iconLeft=false iconRight=true}}
+            Map
+            {{> ionIcon icon="ios-arrow-right"}}
+          {{/ionItem}}
+          {{#ionItem path="updateProfile" iconLeft=false iconRight=true}}
+            Update Profile
+            {{> ionIcon icon="ios-arrow-right"}}
+          {{/ionItem}}
+        {{/ionList}}
+      {{/if}}
+
       <div class="podbar">
         <div class="row">
-        {{#if currentUser}}
-          <button class="auth-btns button button-small button-full button-positive button-clear" data-action="logout">LOG OUT</button>
-          <button class="auth-btns button button-small button-full button-positive button-clear disabled" data-action="login">LOG IN</button>
-        {{else}}
-          <button class="auth-btns button button-small button-full button-positive button-clear disabled" data-action="logout">LOG OUT</button>
-          <button class="auth-btns button button-small button-full button-positive button-clear" data-action="login">LOG IN</button>
-        {{/if}}            
-      </div>
+          {{#if currentUser}}
+            <button class="auth-btns button button-small button-full button-positive button-clear" data-action="logout">LOG OUT</button>
+            <button class="auth-btns button button-small button-full button-positive button-clear disabled" data-action="login">LOG IN</button>
+          {{else}}
+            <button class="auth-btns button button-small button-full button-positive button-clear disabled" data-action="logout">LOG OUT</button>
+            <button class="auth-btns button button-small button-full button-positive button-clear" data-action="login">LOG IN</button>
+          {{/if}}            
+        </div>
       </div>
     {{/ionContent}}
   {{/ionView}}

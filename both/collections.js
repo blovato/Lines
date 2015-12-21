@@ -1,27 +1,47 @@
+// create Lines collection and data schema
 Lines = new Mongo.Collection('lines');
 
 /*
 Lines.attachSchema(new SimpleSchema({
-  title: {
+  createdBy: {
     type: String,
-    max: 200,
-    autoform: {
-      'label-type': 'stacked'
-    }
+    label: 'Created By',
+    max: 200
   },
-  body: {
-    type: String,
-    autoform: {
-      rows: 10,
-      'label-type': 'stacked'
-    }
+  coordinates: {
+    type: [Object],
+    label: 'Coordinates'
   },
-  published: {
-    type: Boolean,
-    defaultValue: true,
-    autoform: {
-      type: 'toggle'
-    }
+  createdAt: {
+    type: Date,
+    label: 'Date'
   }
 }));
 */
+
+
+// create user profile collection and data schema
+UserProfile = new Mongo.Collection('userProfile');
+
+UserProfile.attachSchema(new SimpleSchema({
+  firstName: {
+    type: String,
+    optional: false
+  },
+  lastName: {
+    type: String,
+    optional: false
+  },
+  birthday: {
+    type: Date,
+    optional: true
+  },
+  city: {
+    type: String,
+    optional: true
+  },
+  userId: {
+    type: String,
+    optional: false
+  }
+}));

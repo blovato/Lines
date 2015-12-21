@@ -14,13 +14,11 @@
         <button id="createLine" class="button button-full button-outline button-positive disabled">Create a Line!</button>
         <button id="endLine" class="button button-full button-outline button-assertive disabled">Finish the Line!</button>
       </div>
-
-      <button class="button button-stable button-small button-clear" id="showLineList">show current lines {{> ionIcon icon='ios-plus-empty'}}</button>
-
+      
       {{#ionList}}
         {{#each lines}}
           {{#ionItem}}
-            <h3>{{createdBy}}</h3>
+            <h3>{{userName}}</h3>
             <p>{{createdAtFormattedTime}} | {{createdAtFormattedDay}}</p>
           {{/ionItem}}
         {{/each}}

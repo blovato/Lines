@@ -1,0 +1,14 @@
+<template name="updateProfile">
+  {{> ionNavBar class="bar-positive"}}
+  {{#contentFor "headerButtonLeft"}}
+    {{>ionNavBackButton path="main"}}
+  {{/contentFor}}
+  {{#contentFor "headerTitle"}}
+    <h1 class="title">Update Profile</h1>
+  {{/contentFor}}
+  {{#ionView}}
+    {{#ionContent}}
+      {{> quickForm collection="UserProfile" doc=selectedProfileDoc id="update-profile-form" type="update" buttonContent="Save"}}
+    {{/ionContent}}
+  {{/ionView}}
+</template>

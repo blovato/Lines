@@ -1,8 +1,17 @@
+Meteor.subscribe('Lines');
+Meteor.subscribe('allUserNames');
+
 Template.map.helpers({
   'lines': function(){
     var currentUserId = Meteor.userId();
     //createdBy: "Brenten Lovato"
-    return Lines.find({}, {sort: {createdAt: -1}, limit: 10});
+    return Lines.find({}, {sort: {createdAt: -1}, limit: 6});
+  },
+  'userName': function(){
+    var thisUser = this.createdBy;
+    var first = UserProfile.findOne({userId: thisUser},{fields: {firstName: 1}});
+    var last = UserProfile.findOne({userId: thisUser},{fields: {lastName: 1}});
+    return first['firstName'] + " " + last['lastName'];
   },
   'createdAtFormattedTime': function () {
     var hour = String(this.createdAt.getHours());
@@ -23,50 +32,39 @@ Template.map.helpers({
 //declare global latLng var
 var latLngs = [];
 var buildingLine;
-var lastInsertId;
 
 Template.map.events({
-  'click #showLineList': function(){
-    $('#showLineList').hide();
-
-    // animate lines list
-    $( "div .item" ).first().show( "fast", function showNext() {
-      $( this ).next( "div .item" ).show( "fast", showNext );
-    });
-  },
   'click #createLine': function(){
     // set buttons visibility and class
     $('#createLine').addClass('disabled');
     $('#createLine').hide(100);
     $('#endLine').removeClass('disabled');
     $('#endLine').show(100);
-
-    var lats = [];
-    var lngs = [];
-    var currentUserId = Meteor.userId();
-    var date = new Date();
     
     // create new record that will be updated by the interval
-    Lines.insert({
-      "createdAt": date,
-      "coordinates": latLngs,
-      "createdBy": currentUserId
-    }, function(err, _id){
-      lastInsertId = _id;
+    Meteor.call('insertLine', function(error, result){
+      Session.set('lastInsertId', result);
     });
+    
     // every second check if there is a new latLng, 
     // if true add it to the array
+    var lats = [];
+    var lngs = [];
     buildingLine = setInterval(function(){
       // fetch location on interval and update record
       var currentLatLng = Geolocation.currentLocation();
-      if(!lats.indexOf(currentLatLng.coords.latitude) && !lngs.indexOf(currentLatLng.coords.longitude)){
+      lats.push(currentLatLng.coords.latitude);
+      lngs.push(currentLatLng.coords.longitude);
+
+      if(lats.indexOf(currentLatLng.coords.latitude) == -1 && lngs.indexOf(currentLatLng.coords.longitude) == -1){
         latLngs.push([currentLatLng.coords.latitude, currentLatLng.coords.longitude]);
-        Lines.update(lastInsertId, {$set: {coordinates: latLngs}});
+        console.log(lats);
+        Meteor.call('updateLine', Session.get('lastInsertId'), latLngs);
       }
     }, 1000);
   },
   'click #endLine': function(){
-    // set buttons visibility and class
+    // set main buttons visibility and class
     $('#endLine').addClass('disabled');
     $('#endLine').hide(100);
     $('#createLine').removeClass('disabled');
@@ -76,10 +74,9 @@ Template.map.events({
     clearInterval(buildingLine);
 
     // if the last line was empty then remove it
-    var lastInsert = Lines.find(lastInsertId,{}).fetch();
-  
-    if(lastInsert[0].coordinates.length <= 0){
-      Lines.remove(lastInsertId);
+    var lastInsert = Lines.find(Session.get('lastInsertId'),{}).fetch();
+    if(latLngs.length <= 0){
+      Meteor.call('removeLine', Session.get('lastInsertId'));
       // show searching for location popup
       IonPopup.show({
         title: 'You need to move for the line to be recorded',
@@ -107,6 +104,13 @@ Template.map.rendered = function() {
   // initialize endLine button to hidden
   $('#endLine').hide();
   $('div .item').hide();
+
+  // animate lines list
+  setTimeout(function(){
+    $( "div .item" ).first().show( "fast", function showNext() {
+      $( this ).next( "div .item" ).show( "fast", showNext );
+    });
+  },2000);
 
   // L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
   // create map and attributes

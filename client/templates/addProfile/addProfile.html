@@ -1,0 +1,12 @@
+<template name="addProfile">
+  {{> ionNavBar class="bar-positive"}}
+
+  {{#contentFor "headerTitle"}}
+    <h1 class="title">Create Profile</h1>
+  {{/contentFor}}
+  {{#ionView}}
+    {{#ionContent}}
+      {{> quickForm collection="UserProfile" doc=post id="insert-profile-form" type="insert" buttonContent="Save"}}
+    {{/ionContent}}
+  {{/ionView}}
+</template>

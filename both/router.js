@@ -14,4 +14,6 @@ Meteor.startup(function () {
 Router.map(function() {
   this.route('main', {path: '/'});
   this.route('map');
+  this.route('addProfile');
+  this.route('updateProfile');
 });
