@@ -1,5 +1,5 @@
 Meteor.startup(function () {
-
+/*
   if (Lines.find({}).count() === 0) {
     Lines.insert({
       "createdAt": new Date(),
@@ -78,5 +78,5 @@ Meteor.startup(function () {
         ],
       "createdBy": "Yama Azim",
     });
-  }
+  }*/
 });

@@ -19,7 +19,9 @@
         {{#each lines}}
           {{#ionItem}}
             <h3>{{userName}}</h3>
-            <p>{{createdAtFormattedTime}} | {{createdAtFormattedDay}}</p>
+            <div class="row">
+              <p class="col">{{createdAtFormattedTime}}</p><p class="col col-75"> {{createdAtFormattedDay}}</p>
+            </div>
           {{/ionItem}}
         {{/each}}
       {{/ionList}}

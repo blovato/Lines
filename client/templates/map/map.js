@@ -11,35 +11,49 @@ Template.map.helpers({
     var thisUser = this.createdBy;
     var first = UserProfile.findOne({userId: thisUser},{fields: {firstName: 1}});
     var last = UserProfile.findOne({userId: thisUser},{fields: {lastName: 1}});
-    return first['firstName'] + " " + last['lastName'];
+    return first.firstName + " " + last.lastName;
   },
   'createdAtFormattedTime': function () {
     var hour = String(this.createdAt.getHours());
+    var meridian = 'am'
     if(hour > 12){
       hour = String(this.createdAt.getHours()%12);
+      meridian ='pm'
     }
     var minute = this.createdAt.getMinutes();
     if(minute < 10){
       minute = "0" + String(minute);
     }
-    return hour + ":" + minute;
+    return hour + ":" + minute + " " + meridian;
   },
   'createdAtFormattedDay': function(){
     return this.createdAt.toDateString();
+  },
+  'accuracy': function(){
+    var location = Geolocation.getCurrentLocation();
+    if(location){
+      console.log(location.coords.accuracy);
+      return location.coords.accuracy;
+    }
   }
 });
 
-//declare global latLng var
-var latLngs = [];
-var buildingLine;
+//declare global latLng vars
+var latLngs = [],
+    lats = [],
+    lngs = [],
+    buildingLine,
+    map;
 
 Template.map.events({
   'click #createLine': function(){
     // set buttons visibility and class
     $('#createLine').addClass('disabled');
-    $('#createLine').hide(100);
+    $('#createLine').fadeOut(300);
     $('#endLine').removeClass('disabled');
-    $('#endLine').show(100);
+    setTimeout(function(){
+      $('#endLine').fadeIn(100);
+    },300);
     
     // create new record that will be updated by the interval
     Meteor.call('insertLine', function(error, result){
@@ -48,47 +62,91 @@ Template.map.events({
     
     // every second check if there is a new latLng, 
     // if true add it to the array
-    var lats = [];
-    var lngs = [];
+    var currentLatLng = Geolocation.currentLocation();
+    map.setView(new L.LatLng(currentLatLng.coords.latitude, currentLatLng.coords.longitude), 21);
+
+    var polyline = L.polyline([], {color: 'black'}).addTo(map);
     buildingLine = setInterval(function(){
       // fetch location on interval and update record
       var currentLatLng = Geolocation.currentLocation();
       lats.push(currentLatLng.coords.latitude);
       lngs.push(currentLatLng.coords.longitude);
-
-      if(lats.indexOf(currentLatLng.coords.latitude) == -1 && lngs.indexOf(currentLatLng.coords.longitude) == -1){
-        latLngs.push([currentLatLng.coords.latitude, currentLatLng.coords.longitude]);
-        console.log(lats);
-        Meteor.call('updateLine', Session.get('lastInsertId'), latLngs);
-      }
+      latLngs.push([currentLatLng.coords.latitude, currentLatLng.coords.longitude]);
+      polyline.setLatLngs(latLngs);
+      map.panTo(new L.LatLng(currentLatLng.coords.latitude, currentLatLng.coords.longitude));
+      Meteor.call('updateLine', Session.get('lastInsertId'), latLngs);
     }, 1000);
   },
   'click #endLine': function(){
     // set main buttons visibility and class
     $('#endLine').addClass('disabled');
-    $('#endLine').hide(100);
+    $('#endLine').fadeOut(300);
     $('#createLine').removeClass('disabled');
-    $('#createLine').show(100);
+    setTimeout(function(){
+      $('#createLine').fadeIn(100);
+    },300);
 
     // end search for coordinates and update function
     clearInterval(buildingLine);
 
-    // if the last line was empty then remove it
-    var lastInsert = Lines.find(Session.get('lastInsertId'),{}).fetch();
-    if(latLngs.length <= 0){
-      Meteor.call('removeLine', Session.get('lastInsertId'));
-      // show searching for location popup
+    // find duplicate coordinates   
+    var duplicateIdx = [];
+    for(var i = 0; i < lats.length; i++){
+      var idx = lats.indexOf(lats[i]);
+      if(idx > -1){
+        duplicateIdx.push(idx);
+      }
+    }
+    
+    // if only 5 coordinates or if all records 
+    // are duplicates create warning popup
+    if(latLngs.length <= 5 || latLngs.length == duplicateIdx.length){
+
+      // show didn't move far error
       IonPopup.show({
-        title: 'You need to move for the line to be recorded',
+        title: 'You didn\'t move very far, do you want to delete your last line?',
         buttons: [{
-          text: 'dismiss',
+          text: 'no, keep it',
+          type: 'button-balanced button-clear',
+          onTap: function() {
+            IonPopup.close();
+          }
+        },
+        {
+          text: 'delete it',
           type: 'button-assertive button-clear',
           onTap: function() {
+            Meteor.call('removeLine', Session.get('lastInsertId'));
             IonPopup.close();
           }
         }]
       });
     }
+    else {
+      // finished popup, keep or delete
+      IonPopup.show({
+        title: 'Completed Line! Would you like to keep it or delete it?',
+        buttons: [{
+          text: 'keep',
+          type: 'button-balanced button-clear',
+          onTap: function() {
+            IonPopup.close();
+          }
+        },
+        {
+          text: 'delete',
+          type: 'button-assertive button-clear',
+          onTap: function() {
+            Meteor.call('removeLine', Session.get('lastInsertId'));
+            IonPopup.close();
+          }
+        }]
+      });
+    }
+    // reset coord variables
+    latLngs = [],
+       lats = [],
+       lngs = [];
   } 
 });
 
@@ -104,6 +162,7 @@ Template.map.rendered = function() {
   // initialize endLine button to hidden
   $('#endLine').hide();
   $('div .item').hide();
+  $('#infoBar').hide();
 
   // animate lines list
   setTimeout(function(){
@@ -114,8 +173,8 @@ Template.map.rendered = function() {
 
   // L.Icon.Default.imagePath = 'packages/bevanhunt_leaflet/images';
   // create map and attributes
-  var mapTile = L.tileLayer('http://{s}.tile.openstreetmap.se/hydda/base/{z}/{x}/{y}.png');
-  var map = L.map('map', {
+  var mapTile = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+  map = L.map('map', {
     doubleClickZoom: true,
     attributionControl: false,
     zoomControl: false 
@@ -140,12 +199,19 @@ Template.map.rendered = function() {
 
     userLocation = Geolocation.currentLocation();
     if(userLocation && map){
+      $('#infoBar').fadeIn(400);
+
       IonBackdrop.release();
       clearInterval(loopGeolocation);
       var accuracyLocation = L.circle([userLocation.coords.latitude, 
                                        userLocation.coords.longitude], 
                                        userLocation.coords.accuracy,
                                        {color: "black", weight: 0, opacity: .3}).addTo(map);
+      var popup = L.popup({closeButton: false}).setContent("<b>Your Location</b><br>"+
+                                  userLocation.coords.latitude+", "+ 
+                                  userLocation.coords.longitude+ "<br>Accuracy: "+ 
+                                  userLocation.coords.accuracy+" feet");
+      accuracyLocation.bindPopup(popup).openPopup();
       map.fitBounds(accuracyLocation.getBounds());
       $('#createLine').removeClass('disabled');
     }
