@@ -1,3 +1,3 @@
-Lines 
+Lines IOS app
 
-demo: lines.brentenlovato.com
+demo: <a href="http://lines.brentenlovato.com/">lines.brentenlovato.com/>
